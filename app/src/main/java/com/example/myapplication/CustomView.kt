@@ -53,15 +53,15 @@ class CustomView @JvmOverloads constructor(
     private var peekPoint: PointF
     private var leftPoint: PointF
     private var rightPoint: PointF
-    private val pathTop1st = Path()
-    private val pathTop2nd = Path()
-    private val pathTop3rd = Path()
-    private val pathTop4th = Path()
-    private val pathBottom1st = Path()
-    private val pathBottom2nd = Path()
-    private val pathBottom3rd = Path()
-    private val pathBottom4th = Path()
-    private val radiusDistance = 200f
+    private val pathTop1st = mutableListOf<Path>()
+    private val pathTop2nd = mutableListOf<Path>()
+    private val pathTop3rd = mutableListOf<Path>()
+    private val pathTop4th = mutableListOf<Path>()
+    private val pathBottom1st = mutableListOf<Path>()
+    private val pathBottom2nd = mutableListOf<Path>()
+    private val pathBottom3rd = mutableListOf<Path>()
+    private val pathBottom4th = mutableListOf<Path>()
+    private val radiusDistance = 100f
     private var valueAnimator1st: ValueAnimator
     private var valueAnimator2nd: ValueAnimator
     private var valueAnimator3rd: ValueAnimator
@@ -78,31 +78,31 @@ class CustomView @JvmOverloads constructor(
         paint1st.isAntiAlias = true
         paint1st.color = Color.parseColor("#ff66cc")
         paint1st.style = Paint.Style.STROKE
-        paint1st.strokeWidth = 5f
+        paint1st.strokeWidth = 2f
 
         paint2nd = Paint()
         paint2nd.isAntiAlias = true
         paint2nd.color = Color.parseColor("#6666ff")
         paint2nd.style = Paint.Style.STROKE
-        paint2nd.strokeWidth = 5f
+        paint2nd.strokeWidth = 2f
 
         paint3rd = Paint()
         paint3rd.isAntiAlias = true
         paint3rd.color = Color.parseColor("#66ffcc")
         paint3rd.style = Paint.Style.STROKE
-        paint3rd.strokeWidth = 5f
+        paint3rd.strokeWidth = 2f
 
         paint4th = Paint()
         paint4th.isAntiAlias = true
         paint4th.color = Color.parseColor("#ccff66")
         paint4th.style = Paint.Style.STROKE
-        paint4th.strokeWidth = 5f
+        paint4th.strokeWidth = 2f
 
         paintPoint = Paint()
         paintPoint.isAntiAlias = true
         paintPoint.color = android.graphics.Color.WHITE
         paintPoint.style = Paint.Style.FILL
-        paintPoint.strokeWidth = 10f
+        paintPoint.strokeWidth = 5f
 
         centerBottomPoint = Point()
         centerTopPoint = Point()
@@ -116,26 +116,48 @@ class CustomView @JvmOverloads constructor(
         valueAnimator1st.repeatCount = INFINITE
         valueAnimator1st.addUpdateListener {
             val value = it.animatedValue as Float
+
+            pathBottom1st.clear()
+            pathTop1st.clear()
+            for (point in listCenterBottom) {
+                peekPoint.set(findPeekPointX(point), findPeekPointY(point, value, false))
+                leftPoint.set(findLeftPointX(point, value), findLeftRightPointY(point, value, false))
+                rightPoint.set(findRightPointX(point, value), findLeftRightPointY(point, value, false))
+
+                val path = Path()
+                path.reset()
+                path.moveTo(peekPoint.x, peekPoint.y)
+                path.lineTo(leftPoint.x, leftPoint.y)
+                path.lineTo(rightPoint.x, rightPoint.y)
+                path.lineTo(peekPoint.x, peekPoint.y)
+                pathBottom1st.add(path)
+            }
+
+            for (point in listCenterTop) {
+                peekPoint.set(findPeekPointX(point), findPeekPointY(point, radiusDistance - value, true))
+                leftPoint.set(
+                    findLeftPointX(point, radiusDistance - value),
+                    findLeftRightPointY(point, radiusDistance - value, true)
+                )
+                rightPoint.set(
+                    findRightPointX(point, radiusDistance - value),
+                    findLeftRightPointY(point, radiusDistance - value, true)
+                )
+
+                val path = Path()
+                path.reset()
+                path.moveTo(peekPoint.x, peekPoint.y)
+                path.lineTo(leftPoint.x, leftPoint.y)
+                path.lineTo(rightPoint.x, rightPoint.y)
+                path.lineTo(peekPoint.x, peekPoint.y)
+                pathTop1st.add(path)
+            }
+
             Log.d("animatedValue", "" + value)
-            peekPoint.set(findPeekPointX(centerBottomPoint), findPeekPointY(centerBottomPoint,value,false))
-            leftPoint.set(findLeftPointX(centerBottomPoint,value), findLeftRightPointY(centerBottomPoint,value,false))
-            rightPoint.set(findRightPointX(centerBottomPoint,value), findLeftRightPointY(centerBottomPoint,value,false))
 
-            pathBottom1st.reset()
-            pathBottom1st.moveTo(peekPoint.x, peekPoint.y)
-            pathBottom1st.lineTo(leftPoint.x, leftPoint.y)
-            pathBottom1st.lineTo(rightPoint.x, rightPoint.y)
-            pathBottom1st.lineTo(peekPoint.x, peekPoint.y)
 
-            peekPoint.set(findPeekPointX(centerTopPoint), findPeekPointY(centerTopPoint,radiusDistance - value,true))
-            leftPoint.set(findLeftPointX(centerTopPoint, radiusDistance - value), findLeftRightPointY(centerTopPoint,radiusDistance - value,true))
-            rightPoint.set(findRightPointX(centerTopPoint, radiusDistance - value), findLeftRightPointY(centerTopPoint,radiusDistance - value,true))
 
-            pathTop1st.reset()
-            pathTop1st.moveTo(peekPoint.x, peekPoint.y)
-            pathTop1st.lineTo(leftPoint.x, leftPoint.y)
-            pathTop1st.lineTo(rightPoint.x, rightPoint.y)
-            pathTop1st.lineTo(peekPoint.x, peekPoint.y)
+
             invalidate()
         }
 
@@ -147,25 +169,42 @@ class CustomView @JvmOverloads constructor(
         valueAnimator2nd.addUpdateListener {
             val value = it.animatedValue as Float
 //            Log.d("animatedValue", "" + value)
-            peekPoint.set(findPeekPointX(centerBottomPoint), findPeekPointY(centerBottomPoint,value,false))
-            leftPoint.set(findLeftPointX(centerBottomPoint,value), findLeftRightPointY(centerBottomPoint,value,false))
-            rightPoint.set(findRightPointX(centerBottomPoint,value), findLeftRightPointY(centerBottomPoint,value,false))
 
-            pathBottom2nd.reset()
-            pathBottom2nd.moveTo(peekPoint.x, peekPoint.y)
-            pathBottom2nd.lineTo(leftPoint.x, leftPoint.y)
-            pathBottom2nd.lineTo(rightPoint.x, rightPoint.y)
-            pathBottom2nd.lineTo(peekPoint.x, peekPoint.y)
+            pathBottom2nd.clear()
+            pathTop2nd.clear()
+            for (point in listCenterBottom) {
+                peekPoint.set(findPeekPointX(point), findPeekPointY(point, value, false))
+                leftPoint.set(findLeftPointX(point, value), findLeftRightPointY(point, value, false))
+                rightPoint.set(findRightPointX(point, value), findLeftRightPointY(point, value, false))
 
-            peekPoint.set(findPeekPointX(centerTopPoint), findPeekPointY(centerTopPoint,radiusDistance - value,true))
-            leftPoint.set(findLeftPointX(centerTopPoint, radiusDistance - value), findLeftRightPointY(centerTopPoint,radiusDistance - value,true))
-            rightPoint.set(findRightPointX(centerTopPoint, radiusDistance - value), findLeftRightPointY(centerTopPoint,radiusDistance - value,true))
+                val path = Path()
+                path.reset()
+                path.moveTo(peekPoint.x, peekPoint.y)
+                path.lineTo(leftPoint.x, leftPoint.y)
+                path.lineTo(rightPoint.x, rightPoint.y)
+                path.lineTo(peekPoint.x, peekPoint.y)
+                pathBottom2nd.add(path)
+            }
 
-            pathTop2nd.reset()
-            pathTop2nd.moveTo(peekPoint.x, peekPoint.y)
-            pathTop2nd.lineTo(leftPoint.x, leftPoint.y)
-            pathTop2nd.lineTo(rightPoint.x, rightPoint.y)
-            pathTop2nd.lineTo(peekPoint.x, peekPoint.y)
+            for (point in listCenterTop) {
+                peekPoint.set(findPeekPointX(point), findPeekPointY(point, radiusDistance - value, true))
+                leftPoint.set(
+                    findLeftPointX(point, radiusDistance - value),
+                    findLeftRightPointY(point, radiusDistance - value, true)
+                )
+                rightPoint.set(
+                    findRightPointX(point, radiusDistance - value),
+                    findLeftRightPointY(point, radiusDistance - value, true)
+                )
+
+                val path = Path()
+                path.reset()
+                path.moveTo(peekPoint.x, peekPoint.y)
+                path.lineTo(leftPoint.x, leftPoint.y)
+                path.lineTo(rightPoint.x, rightPoint.y)
+                path.lineTo(peekPoint.x, peekPoint.y)
+                pathTop2nd.add(path)
+            }
 
             invalidate()
         }
@@ -178,25 +217,42 @@ class CustomView @JvmOverloads constructor(
         valueAnimator3rd.addUpdateListener {
             val value = it.animatedValue as Float
 //            Log.d("animatedValue", "" + value)
-            peekPoint.set(findPeekPointX(centerBottomPoint), findPeekPointY(centerBottomPoint,value,false))
-            leftPoint.set(findLeftPointX(centerBottomPoint,value), findLeftRightPointY(centerBottomPoint,value,false))
-            rightPoint.set(findRightPointX(centerBottomPoint,value), findLeftRightPointY(centerBottomPoint,value,false))
 
-            pathBottom3rd.reset()
-            pathBottom3rd.moveTo(peekPoint.x, peekPoint.y)
-            pathBottom3rd.lineTo(leftPoint.x, leftPoint.y)
-            pathBottom3rd.lineTo(rightPoint.x, rightPoint.y)
-            pathBottom3rd.lineTo(peekPoint.x, peekPoint.y)
+            pathBottom3rd.clear()
+            pathTop3rd.clear()
+            for (point in listCenterBottom) {
+                peekPoint.set(findPeekPointX(point), findPeekPointY(point, value, false))
+                leftPoint.set(findLeftPointX(point, value), findLeftRightPointY(point, value, false))
+                rightPoint.set(findRightPointX(point, value), findLeftRightPointY(point, value, false))
 
-            peekPoint.set(findPeekPointX(centerTopPoint), findPeekPointY(centerTopPoint,radiusDistance - value,true))
-            leftPoint.set(findLeftPointX(centerTopPoint, radiusDistance - value), findLeftRightPointY(centerTopPoint,radiusDistance - value,true))
-            rightPoint.set(findRightPointX(centerTopPoint, radiusDistance - value), findLeftRightPointY(centerTopPoint,radiusDistance - value,true))
+                val path = Path()
+                path.reset()
+                path.moveTo(peekPoint.x, peekPoint.y)
+                path.lineTo(leftPoint.x, leftPoint.y)
+                path.lineTo(rightPoint.x, rightPoint.y)
+                path.lineTo(peekPoint.x, peekPoint.y)
+                pathBottom3rd.add(path)
+            }
 
-            pathTop3rd.reset()
-            pathTop3rd.moveTo(peekPoint.x, peekPoint.y)
-            pathTop3rd.lineTo(leftPoint.x, leftPoint.y)
-            pathTop3rd.lineTo(rightPoint.x, rightPoint.y)
-            pathTop3rd.lineTo(peekPoint.x, peekPoint.y)
+            for (point in listCenterTop) {
+                peekPoint.set(findPeekPointX(point), findPeekPointY(point, radiusDistance - value, true))
+                leftPoint.set(
+                    findLeftPointX(point, radiusDistance - value),
+                    findLeftRightPointY(point, radiusDistance - value, true)
+                )
+                rightPoint.set(
+                    findRightPointX(point, radiusDistance - value),
+                    findLeftRightPointY(point, radiusDistance - value, true)
+                )
+
+                val path = Path()
+                path.reset()
+                path.moveTo(peekPoint.x, peekPoint.y)
+                path.lineTo(leftPoint.x, leftPoint.y)
+                path.lineTo(rightPoint.x, rightPoint.y)
+                path.lineTo(peekPoint.x, peekPoint.y)
+                pathTop3rd.add(path)
+            }
 
             invalidate()
         }
@@ -204,30 +260,40 @@ class CustomView @JvmOverloads constructor(
         valueAnimator4th = ValueAnimator.ofFloat(0f, radiusDistance)
         valueAnimator4th.interpolator = LinearInterpolator()
         valueAnimator4th.duration = mDurationMax
-        valueAnimator4th.startDelay = mDurationMax * 3 / 4
+        val delay = mDurationMax * 3/4
+        valueAnimator4th.startDelay = delay
         valueAnimator4th.repeatCount = INFINITE
         valueAnimator4th.addUpdateListener {
             val value = it.animatedValue as Float
 //            Log.d("animatedValue", "" + value)
-            peekPoint.set(findPeekPointX(centerBottomPoint), findPeekPointY(centerBottomPoint,value,false))
-            leftPoint.set(findLeftPointX(centerBottomPoint,value), findLeftRightPointY(centerBottomPoint,value,false))
-            rightPoint.set(findRightPointX(centerBottomPoint,value), findLeftRightPointY(centerBottomPoint,value,false))
 
-            pathBottom4th.reset()
-            pathBottom4th.moveTo(peekPoint.x, peekPoint.y)
-            pathBottom4th.lineTo(leftPoint.x, leftPoint.y)
-            pathBottom4th.lineTo(rightPoint.x, rightPoint.y)
-            pathBottom4th.lineTo(peekPoint.x, peekPoint.y)
+            pathBottom4th.clear()
+            pathTop4th.clear()
+            for (point in listCenterBottom) {
+                peekPoint.set(findPeekPointX(point), findPeekPointY(point,value,false))
+                leftPoint.set(findLeftPointX(point,value), findLeftRightPointY(point,value,false))
+                rightPoint.set(findRightPointX(point,value), findLeftRightPointY(point,value,false))
 
-            peekPoint.set(findPeekPointX(centerTopPoint), findPeekPointY(centerTopPoint,radiusDistance - value,true))
-            leftPoint.set(findLeftPointX(centerTopPoint, radiusDistance - value), findLeftRightPointY(centerTopPoint,radiusDistance - value,true))
-            rightPoint.set(findRightPointX(centerTopPoint, radiusDistance - value), findLeftRightPointY(centerTopPoint,radiusDistance - value,true))
+                val path = Path()
+                path.moveTo(peekPoint.x, peekPoint.y)
+                path.lineTo(leftPoint.x, leftPoint.y)
+                path.lineTo(rightPoint.x, rightPoint.y)
+                path.lineTo(peekPoint.x, peekPoint.y)
+                pathBottom4th.add(path)
+            }
 
-            pathTop4th.reset()
-            pathTop4th.moveTo(peekPoint.x, peekPoint.y)
-            pathTop4th.lineTo(leftPoint.x, leftPoint.y)
-            pathTop4th.lineTo(rightPoint.x, rightPoint.y)
-            pathTop4th.lineTo(peekPoint.x, peekPoint.y)
+            for (point in listCenterTop) {
+                peekPoint.set(findPeekPointX(point), findPeekPointY(point,radiusDistance - value,true))
+                leftPoint.set(findLeftPointX(point, radiusDistance - value), findLeftRightPointY(point,radiusDistance - value,true))
+                rightPoint.set(findRightPointX(point, radiusDistance - value), findLeftRightPointY(point,radiusDistance - value,true))
+
+                val path = Path()
+                path.moveTo(peekPoint.x, peekPoint.y)
+                path.lineTo(leftPoint.x, leftPoint.y)
+                path.lineTo(rightPoint.x, rightPoint.y)
+                path.lineTo(peekPoint.x, peekPoint.y)
+                pathTop4th.add(path)
+            }
 
             invalidate()
         }
@@ -236,14 +302,34 @@ class CustomView @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
 
-        centerBottomPoint.set(w/2, h/2)
+        var isAllow = true
+        var numberHorizon = 0
+        var pointX = 0
+        var pointY = 0
 
-        centerTopPoint.set(centerBottomPoint.x,centerBottomPoint.y - radiusDistance.toInt())
-
-//        val isFalse = true
-//        while (isFalse){
-//
-//        }
+        while (isAllow) {
+            if (pointX > (w + radiusDistance) && pointY > (h + radiusDistance)) {
+                isAllow = false
+            } else {
+                if (pointX < (w + radiusDistance)) {
+                    if (numberHorizon % 2 == 0) {
+                        val point = Point(pointX, pointY)
+                        listCenterTop.add(point)
+                        listCenterBottom.add(Point(point.x, point.y + radiusDistance.toInt()))
+                    } else {
+                        val point = Point(pointX, pointY - radiusDistance.toInt() / 2)
+                        listCenterBottom.add(point)
+                        listCenterTop.add(Point(pointX,pointY + 2 * radiusDistance.toInt() - radiusDistance.toInt() / 2))
+                    }
+                    numberHorizon++
+                    pointX += radiusDistance.toInt() - 12
+                } else {
+                    numberHorizon = 0
+                    pointX = 0
+                    pointY += 3 * radiusDistance.toInt()
+                }
+            }
+        }
 
         valueAnimator1st.start()
         valueAnimator2nd.start()
@@ -257,18 +343,81 @@ class CustomView @JvmOverloads constructor(
         super.onDraw(canvas)
 
         canvas ?: return
-//        canvas.drawCircle(centerBottomPoint.x.toFloat(), centerBottomPoint.y.toFloat(), radiusDistance, paint1st)
-//        canvas.drawCircle(centerBottomPoint.x.toFloat(), centerBottomPoint.y.toFloat(), findDistancePointYLeftRightToCenter(radiusDistance), paint1st)
 
-//        canvas.drawPoint(centerBottomPoint.x.toFloat(), centerBottomPoint.y.toFloat(), paintPoint)
-        canvas.drawPath(pathBottom1st, paint1st)
-        canvas.drawPath(pathBottom2nd, paint2nd)
-        canvas.drawPath(pathBottom3rd, paint3rd)
-        canvas.drawPath(pathBottom4th, paint4th)
-        canvas.drawPath(pathTop1st, paint1st)
-        canvas.drawPath(pathTop2nd, paint2nd)
-        canvas.drawPath(pathTop3rd, paint3rd)
-        canvas.drawPath(pathTop4th, paint4th)
+//        testCircle(canvas)
+
+        for (path in pathBottom1st) {
+            canvas.drawPath(path, paint1st)
+        }
+        for (path in pathBottom2nd) {
+            canvas.drawPath(path, paint2nd)
+        }
+        for (path in pathBottom3rd) {
+            canvas.drawPath(path, paint3rd)
+        }
+        for (path in pathBottom4th) {
+            canvas.drawPath(path, paint4th)
+        }
+        for (path in pathTop1st) {
+            canvas.drawPath(path, paint1st)
+        }
+        for (path in pathTop2nd) {
+            canvas.drawPath(path, paint2nd)
+        }
+        for (path in pathTop3rd) {
+            canvas.drawPath(path, paint3rd)
+        }
+        for (path in pathTop4th) {
+            canvas.drawPath(path, paint4th)
+        }
+    }
+
+    fun testCircle(canvas: Canvas) {
+        canvas.drawCircle(centerBottomPoint.x.toFloat(), centerBottomPoint.y.toFloat(), radiusDistance, paint1st)
+        canvas.drawCircle(
+            centerBottomPoint.x.toFloat(),
+            centerBottomPoint.y.toFloat(),
+            findDistancePointYLeftRightToCenter(radiusDistance),
+            paint1st
+        )
+
+        canvas.drawPoint(centerBottomPoint.x.toFloat(), centerBottomPoint.y.toFloat(), paintPoint)
+        canvas.drawCircle(centerTopPoint.x.toFloat(), centerTopPoint.y.toFloat(), radiusDistance, paint1st)
+        canvas.drawCircle(
+            centerTopPoint.x.toFloat(),
+            centerTopPoint.y.toFloat(),
+            findDistancePointYLeftRightToCenter(radiusDistance),
+            paint1st
+        )
+
+        canvas.drawPoint(centerTopPoint.x.toFloat(), centerTopPoint.y.toFloat(), paintPoint)
+        for (point in listCenterTop) {
+            canvas.drawCircle(point.x.toFloat(), point.y.toFloat(), radiusDistance, paint1st)
+            canvas.drawCircle(
+                point.x.toFloat(),
+                point.y.toFloat(),
+                findDistancePointYLeftRightToCenter(radiusDistance),
+                paint1st
+            )
+
+            canvas.drawPoint(point.x.toFloat(), point.y.toFloat(), paintPoint)
+        }
+        for (point in listCenterBottom) {
+            canvas.drawCircle(
+                point.x.toFloat(),
+                point.y.toFloat(),
+                radiusDistance,
+                paint1st
+            )
+            canvas.drawCircle(
+                point.x.toFloat(),
+                point.y.toFloat(),
+                findDistancePointYLeftRightToCenter(radiusDistance),
+                paint1st
+            )
+
+            canvas.drawPoint(point.x.toFloat(), point.y.toFloat(), paintPoint)
+        }
     }
 
 
